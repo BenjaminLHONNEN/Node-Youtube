@@ -1,0 +1,54 @@
+doctype html
+html(lang='fr')
+    head
+        meta(charset='UTF-8')
+        title B & J
+
+        link(rel="icon" href="assets/img/favicon.ico" type="image/x-icon")
+        link(rel="shortcut icon" href="assets/img/favicon.ico" type="image/x-icon")
+        link(rel="icon" type="image/png" href="assets/img/icon.png")
+
+
+        link(href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet")
+        link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css")
+        script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js")
+
+
+        script(src='https://cdn.jsdelivr.net/npm/vue')
+        script(src='assets/js/index.js')
+        script(src='assets/js/apiCall.js')
+
+        link(rel='stylesheet', href='assets/css/style.css')
+    body
+        div.navbar-fixed
+            nav.red
+                div.nav-wrapper
+                    a.brand-logo(href='/')
+                        span Y+
+
+                    ul#nav-mobile.right.hide-on-med-and-down
+                        li
+                            a(href='/following') Abonnements
+        div.container
+            div.row
+                div.input-field.col.s10
+                    i.material-icons.prefix search
+                    input(type="text").validate#searchInput
+                    label(for="searchInput") Recherche
+                div.input-field.col.s2
+                    button.btn.red.waves-effect.waves-light#searchButton Rechercher
+
+            div#app
+                div(v-if="channels").listResult
+                    div(v-for="channel in channels").row
+                        div.col.s2
+                            img(:src="channel.snippet.thumbnails.high.url").responsive-img.circle
+                        div.col.s10
+                            h3.no-margin {{channel.snippet.title}}
+                            p.icon-container.m-5px <label><i class="material-icons icon-txt-size">videocam</i></label> <span>{{channel.statistics.videoCountPretty}}</span>
+                            p.icon-container.m-5px <label><i class="material-icons icon-txt-size">people</i></label> <span>{{channel.statistics.subscriberCountPretty}}</span>
+                            button(:onclick="'addFollow(\"' + channel.id + '\")'").btn.red.waves-effect.waves-light Follow
+
+
+
+

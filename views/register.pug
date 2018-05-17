@@ -1,0 +1,28 @@
+doctype html
+html(lang='fr')
+    head
+        meta(charset='UTF-8')
+        title B & J
+
+        link(rel="icon" href="assets/img/favicon.ico" type="image/x-icon")
+        link(rel="shortcut icon" href="assets/img/favicon.ico" type="image/x-icon")
+        link(rel="icon" type="image/png" href="assets/img/icon.png")
+
+        link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css")
+        script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js")
+
+        link(rel='stylesheet', href='https://use.fontawesome.com/releases/v5.0.12/css/all.css', integrity='sha384-G0fIWCsCzJIMAVNQPfjH08cyYaUtMwjJwqiRKxxE/rx96Uroj1BtIQ6MLJuheaO9', crossorigin='anonymous')
+
+        link(rel='stylesheet', href='assets/css/style.css')
+    body
+        form(method="post")
+            input(type="email", name="mail", placeholder="email")
+            input(type="password", name="password", placeholder="password")
+            input(type="text", name="userName", placeholder="User Name")
+            button(type="submit") Register
+
+            div.txt-a-r
+                a(href="/login") Log In
+
+
+
