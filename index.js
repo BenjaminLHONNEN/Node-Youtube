@@ -35,42 +35,68 @@ app.get('/', (req, res) => {
 });
 app.get('/following', (req, res) => {
     if (req.user !== undefined && req.user !== null) {
-        Follows
-            .sync()
-            .then(() => {
-                return Follows
-                    .find({
-                    where: {
-                        userId: req.user.id,
-                    }
-                })
-            })
-            .then((channelsIds) => {
-                console.log("channelsIds : ",channelsIds);
-                channelsIds.forEach((value, index, array) => {
-                    request({
-                        headers: {
-                            'User-Agent': 'Node App',
-                        },
-                        uri: "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=" + value.channelId + "&maxResults=10&order=date&type=video&key="+YOUTUBE_API_KEY
-                    }, (err, response, body) => {
-                        console.log(response.statusCode);
-                        if (err) {
-                            console.error(err);
-                        } else if (Math.floor(response.statusCode / 100) === 2) {
-                            res.setHeader('Content-Type', 'application/json');
-                            res.send(body);
-                        } else {
-                            res.sendStatus(500);
-                        }
-                    });
-                });
-            });
-        res.render('following',);
+        res.render("following");
     } else {
         res.redirect("/login");
     }
 });
+app.get('/apit/get/following', (req, res) => {
+    if (req.user !== undefined && req.user !== null) {
+        Follows
+            .sync()
+            .then(() => {
+                return Follows
+                    .findAll({
+                        where: {
+                            userId: req.user.id,
+                        }
+                    })
+            })
+            .then((channelsIds) => {
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify(channelsIds));
+            });
+    } else {
+        res.redirect("/login");
+    }
+});
+
+
+function getChannelInfo(channelId, cb) {
+    const url = "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=" + channelId + "&key=" + YOUTUBE_API_KEY;
+    return request({
+        headers: {
+            'User-Agent': 'Node App',
+        },
+        uri: url
+    }, (err, response, body) => {
+        if (err) {
+            return cb(err, response, body);
+        } else if (Math.floor(response.statusCode / 100) === 2) {
+            return cb(null, response, body);
+        } else {
+            return cb(null, response, body);
+        }
+    });
+}
+
+function getVideosInfo(videosIds, cb) {
+    const url = "https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,player&id=" + videosIds.toString() + "&key=" + YOUTUBE_API_KEY;
+    request({
+        headers: {
+            'User-Agent': 'Node App',
+        },
+        uri: url
+    }, (err, response, body) => {
+        if (err) {
+            cb(err, response, body);
+        } else if (Math.floor(response.statusCode / 100) === 2) {
+            cb(null, response, body);
+        } else {
+            cb(err, response, body);
+        }
+    });
+}
 
 app.get('/api/post/follow-:channelId', (req, res) => {
     if (req.user !== undefined && req.user !== null && req.params.channelId !== undefined && req.params.channelId !== null) {
@@ -132,10 +158,7 @@ app.get('/api/get/channels-:search', (req, res) => {
                 },
                 uri: urlChannels
             }, (err, response, body) => {
-                console.log(response.statusCode);
-                console.log(urlChannels);
                 if (err) {
-                    console.error(err);
                 } else if (Math.floor(response.statusCode / 100) === 2) {
                     res.setHeader('Content-Type', 'application/json');
                     res.send(body);
