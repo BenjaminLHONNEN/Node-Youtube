@@ -82,7 +82,7 @@ html(lang='fr')
                             li(v-if="videoDetailComments" v-for='comment in videoDetailComments').row.no-margin.p5
                                 .col.s1.b-r {{comment.user.userName}}
                                 .col.s11 {{comment.comment}}
-                            li(v-if="!videoDetailComments") Pas de Commentaire
+                            li(v-if="videoDetailComments === null").p5 Pas de Commentaire
 
 
                     .addComment.row

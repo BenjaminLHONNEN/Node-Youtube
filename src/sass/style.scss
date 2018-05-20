@@ -188,9 +188,11 @@ a {
 .listComment li:nth-child(even) {
   border-bottom: solid 1px rgba(244, 67, 54, 0.5);
 }
-
 .listComment li:nth-child(odd) {
   border-bottom: solid 1px rgba(34, 34, 34, 0.5);
+}
+.listComment li:last-child {
+  border-bottom: none;
 }
 
 .input-field .prefix.active {

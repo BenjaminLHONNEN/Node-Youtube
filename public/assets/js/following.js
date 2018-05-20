@@ -127,7 +127,9 @@ function loadComments() {
                 console.error("Erreur : ", err)
             } else {
                 app.videoDetailComments = null;
-                app.videoDetailComments = data;
+                if(data.length !==0){
+                    app.videoDetailComments = data;
+                }
             }
         });
 }
