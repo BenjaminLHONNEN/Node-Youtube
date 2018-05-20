@@ -21,6 +21,10 @@ window.onload = function () {
             channels: []
         }
     });
+
+    $(document).ready(function(){
+        $('.sidenav').sidenav();
+    });
 };
 
 function searchChannels() {

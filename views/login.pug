@@ -4,22 +4,23 @@ html(lang='fr')
         meta(charset='UTF-8')
         title B & J
 
-        link(rel="icon" href="assets/img/favicon.ico" type="image/x-icon")
-        link(rel="shortcut icon" href="assets/img/favicon.ico" type="image/x-icon")
-        link(rel="icon" type="image/png" href="assets/img/icon.png")
+        link(rel="icon" type="image/png" href="img/icon.png")
 
         link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css")
         script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js")
 
-        link(rel='stylesheet', href='https://use.fontawesome.com/releases/v5.0.12/css/all.css', integrity='sha384-G0fIWCsCzJIMAVNQPfjH08cyYaUtMwjJwqiRKxxE/rx96Uroj1BtIQ6MLJuheaO9', crossorigin='anonymous')
-
         link(rel='stylesheet', href='assets/css/style.css')
 
     body
-        form(method="post")
-            input(type="email", name="username", placeholder="email")
-            input(type="password", name="password", placeholder="password")
-            button(type="submit").waves-effect.waves-light.btn.red Log In
-
-            div.txt-a-r
-                a(href="/register") Register
+        div.container
+            div #{failureFlash}
+            form(method="post")
+                div.input-field
+                    label(for="email") Email
+                    input(type="email", name="username", id="email" autocomplete="email")
+                div.input-field
+                    label(for="password") Mot de Passe
+                    input(type="password", name="password", id="password", autocomplete="current-password")
+                div.input-field
+                    button(type="submit").waves-effect.waves-light.btn.red Log In
+                    a(href="/register").waves-effect.waves-light.btn.red  Register

@@ -6,8 +6,12 @@ const LocalStrategy = require('passport-local').Strategy;
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const request = require('request');
+const bcrypt = require('bcrypt');
 
-const {db, User, Follows} = require('./DB');
+// bcrypt request express-session cookie-parser passport-local express passport body-parser
+
+const saltRounds = 12;
+const {db, User, Follows, Comment} = require('./DB');
 const {COOKIE_SECRET, YOUTUBE_API_KEY} = require('./const');
 
 app.set('view engine', 'pug');
@@ -35,12 +39,14 @@ app.get('/', (req, res) => {
 });
 app.get('/following', (req, res) => {
     if (req.user !== undefined && req.user !== null) {
-        res.render("following");
+        res.render("following", {user: req.user.dataValues});
     } else {
         res.redirect("/login");
     }
 });
-app.get('/apit/get/following', (req, res) => {
+
+
+app.get('/api/get/following', (req, res) => {
     if (req.user !== undefined && req.user !== null) {
         Follows
             .sync()
@@ -61,27 +67,30 @@ app.get('/apit/get/following', (req, res) => {
     }
 });
 
+app.get('/api/get/comments-:videoId', (req, res) => {
+    if (req.user !== undefined && req.user !== null) {
+        Comment
+            .sync()
+            .then(() => {
+                return Comment
+                    .findAll({
+                        where: {
+                            idVideo: req.params.videoId,
+                        },
+                        include:[User]
+                    })
+            })
+            .then((comments) => {
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify(comments));
+            });
+    } else {
+        res.redirect("/login");
+    }
+});
 
-function getChannelInfo(channelId, cb) {
-    const url = "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=" + channelId + "&key=" + YOUTUBE_API_KEY;
-    return request({
-        headers: {
-            'User-Agent': 'Node App',
-        },
-        uri: url
-    }, (err, response, body) => {
-        if (err) {
-            return cb(err, response, body);
-        } else if (Math.floor(response.statusCode / 100) === 2) {
-            return cb(null, response, body);
-        } else {
-            return cb(null, response, body);
-        }
-    });
-}
-
-function getVideosInfo(videosIds, cb) {
-    const url = "https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,player&id=" + videosIds.toString() + "&key=" + YOUTUBE_API_KEY;
+app.get('/api/get/getLastVideos-:channelId', (req, res) => {
+    const url = "https://www.googleapis.com/youtube/v3/search?part=id&channelId=" + req.params.channelId + "&maxResults=10&order=date&type=video&key=" + YOUTUBE_API_KEY;
     request({
         headers: {
             'User-Agent': 'Node App',
@@ -89,14 +98,59 @@ function getVideosInfo(videosIds, cb) {
         uri: url
     }, (err, response, body) => {
         if (err) {
-            cb(err, response, body);
+            res.sendStatus(500);
         } else if (Math.floor(response.statusCode / 100) === 2) {
-            cb(null, response, body);
+            let tmp = JSON.parse(body);
+            tmp['channelId'] = req.params.channelId;
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify(tmp));
         } else {
-            cb(err, response, body);
+            res.sendStatus(403);
         }
     });
-}
+});
+app.get('/api/get/channel-:channelId', (req, res) => {
+    const url = "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=" + req.params.channelId + "&key=" + YOUTUBE_API_KEY;
+    request({
+        headers: {
+            'User-Agent': 'Node App',
+        },
+        uri: url
+    }, (err, response, body) => {
+        if (err) {
+            res.sendStatus(500);
+        } else if (Math.floor(response.statusCode / 100) === 2) {
+            let tmp = JSON.parse(body);
+            tmp['channelId'] = req.params.channelId;
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify(tmp));
+        } else {
+            res.sendStatus(403);
+        }
+    });
+});
+
+app.get('/api/get/videos-:videosIds', (req, res) => {
+    const url = "https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,player&id=" + req.params.videosIds + "&key=" + YOUTUBE_API_KEY;
+    request({
+        headers: {
+            'User-Agent': 'Node App',
+        },
+        uri: url
+    }, (err, response, body) => {
+        if (err) {
+            res.sendStatus(500);
+        } else if (Math.floor(response.statusCode / 100) === 2) {
+            console.log("err : ", err);
+            console.log("response.statusCode : ", response.statusCode);
+            res.setHeader('Content-Type', 'application/json');
+            res.send(body);
+        } else {
+            res.sendStatus(403);
+        }
+    });
+});
+
 
 app.get('/api/post/follow-:channelId', (req, res) => {
     if (req.user !== undefined && req.user !== null && req.params.channelId !== undefined && req.params.channelId !== null) {
@@ -126,6 +180,27 @@ app.get('/api/post/follow-:channelId', (req, res) => {
     }
 });
 
+app.post('/api/post/comment-:videoId', (req, res) => {
+    if (req.user !== undefined && req.user !== null && req.params.videoId !== undefined && req.params.videoId !== null) {
+        Comment
+            .sync()
+            .then(() => {
+                console.log("Create Comment : ");
+                console.log("comment : ", req.body.comment);
+                console.log("user.id : ", req.user.id);
+                console.log("videoId : ",req.params.videoId);
+                Comment.create({
+                    idUser: req.user.id,
+                    comment: req.body.comment,
+                    idVideo: req.params.videoId,
+                });
+                res.sendStatus(200);
+            });
+    } else {
+        res.sendStatus(403);
+    }
+});
+
 app.get('/api/get/channels-:search', (req, res) => {
     // "https://www.googleapis.com/youtube/v3/search?key="+ YOUTUBE_API_KEY +"&q=" + req.params.search+"&maxResults=10&type=channel&part=snippet"
     const url = "https://www.googleapis.com/youtube/v3/search?key=" + YOUTUBE_API_KEY + "&q=" + req.params.search + "&maxResults=10&type=channel&part=snippet";
@@ -145,7 +220,6 @@ app.get('/api/get/channels-:search', (req, res) => {
 
             let urlChannels = "https://www.googleapis.com/youtube/v3/channels?key=" + YOUTUBE_API_KEY + "&part=id,snippet,statistics&id=";
             channels.items.forEach(function (value, index, array) {
-                console.log(value.snippet.title + " | " + value.id.channelId);
                 urlChannels += (value.id.channelId);
                 if (index !== array.length - 1) {
                     urlChannels += ",";
@@ -187,32 +261,47 @@ app.get('/register', (req, res) => {
     res.render('register');
 });
 app.post('/register', (req, res) => {
-    User
-        .sync()
-        .then(() => {
-            return User.create({
-                mail: req.body.mail,
-                password: req.body.password,
-                userName: req.body.userName,
-            });
-        })
-        .then((user) => {
-            user = user.dataValues;
-            console.error(user);
-            req.login(user, function (err) {
-                if (err) {
-                    console.error(err);
-                    res.redirect('/register');
-                } else {
-                    res.redirect('/');
+    bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
+        User
+            .sync()
+            .then(() => {
+                User.find({
+                    where: {
+                        mail: req.body.userName,
+                    }
+                })
+            })
+            .then((user) => {
+                if (user === null || user === undefined) {
+                    return User.create({
+                        mail: req.body.userName,
+                        password: hash,
+                        userName: req.body.pseudo,
+                    });
                 }
+            })
+            .then((user) => {
+                user = user.dataValues;
+                console.error(user);
+                req.login(user, function (err) {
+                    if (err) {
+                        console.error(err);
+                        res.redirect('/register');
+                    } else {
+                        res.redirect('/');
+                    }
+                });
+            })
+            .catch(() => {
+                res.send(500);
             });
-        })
-        .catch(() => {
-            res.send(500);
-        });
+    });
 });
 
+app.get('/disconnect', (req, res) => {
+    req.user = null;
+    res.redirect('login');
+});
 
 passport.serializeUser((user, cb) => {
     cb(null, user.mail);
@@ -231,16 +320,22 @@ passport.use(new LocalStrategy((mail, password, done) => {
     User
         .findOne({where: {mail}})
         .then(function (user) {
-            if (user && user.dataValues.password !== password) {
-                user = user.dataValues;
-                // User not found or an invalid password has been provided
+            if (user) {
+                bcrypt.compare(password, user.dataValues.password, function (err, res) {
+                    if (res === true) {
+                        return done(null, user);
+                    } else {
+                        return done(null, false, {
+                            message: 'Invalid credentials'
+                        });
+                    }
+                });
+
+            } else {
                 return done(null, false, {
                     message: 'Invalid credentials'
                 });
             }
-
-            // User found
-            return done(null, user);
         })
         // If an error occured, report it
         .catch(done);

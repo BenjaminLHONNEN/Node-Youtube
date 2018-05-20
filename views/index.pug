@@ -11,6 +11,7 @@ html(lang='fr')
 
         link(href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet")
         link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css")
+        script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js")
         script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js")
 
 
@@ -26,9 +27,29 @@ html(lang='fr')
                     a.brand-logo(href='/')
                         span Y+
 
+                    a(href="#" data-target="mobile-demo").sidenav-trigger <i class="material-icons">menu</i>
+
                     ul#nav-mobile.right.hide-on-med-and-down
                         li
                             a(href='/following') Abonnements
+                        li
+                            a.dropdown-trigger(href='#' data-target='dropdown2') Hello #{user.userName}
+
+                    ul#mobile-demo.sidenav
+                        li
+                            a(href='/') Accueil
+                        li
+                            a(href='/following') Abonnements
+                        li
+                            a.dropdown-trigger(href='#' data-target='dropdown1') Hello #{user.userName}
+
+
+                    ul#dropdown1.dropdown-content
+                        li
+                            a(href="/disconnect").red-text Disconnect
+                    ul#dropdown2.dropdown-content
+                        li
+                            a(href="/disconnect").red-text Disconnect
         div.container
             div.row
                 div.input-field.col.s10
@@ -52,3 +73,6 @@ html(lang='fr')
 
 
 
+
+script.
+    $('.dropdown-trigger').dropdown();
